@@ -1,0 +1,44 @@
+services:
+
+  app1:
+    build: ./app1
+    container_name: devopshub-app1
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - devopshub-network
+
+  app2:
+    build: ./app2
+    container_name: devopshub-app2
+    ports:
+      - "3001:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - devopshub-network
+
+  redis:
+    image: redis:latest
+    container_name: devopshub-redis
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - devopshub-network
+
+volumes:
+  redis_data:
+
+networks:
+  devopshub-network:
+    driver: bridge
