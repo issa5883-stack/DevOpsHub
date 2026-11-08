@@ -99,8 +99,8 @@ docker compose ps
 
 ## 🌐 Application Access
 
-- App 1 – Message Collector: http://localhost:5000
-- App 2 – Dashboard: http://localhost:5001
+- App 1 – Message Collector: http://localhost:3000
+- App 2 – Dashboard: http://localhost:3001
 
 ## 💾 Data Persistence
 
