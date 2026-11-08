@@ -1,0 +1,13 @@
+{
+    "name": "devopshub-app2",
+    "version": "1.0.0",
+    "description": "Dashboard Application - shows total messages and visits from Redis",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js"
+    },
+    "dependencies": {
+        "express": "^4.21.2",
+        "redis": "^4.7.0"
+    }
+}
