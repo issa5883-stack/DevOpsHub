@@ -16,41 +16,214 @@ client.on("error", (err) => {
     console.error("Redis Client Error", err);
 });
 
-// Connect to Redis
+// Escape HTML for security
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+// Start Server
 async function startServer() {
     await client.connect();
 
     console.log("Connected to Redis");
 
+    // Home Page
     app.get("/", async (req, res) => {
         try {
             // Increment visit counter
             const visits = await client.incr("visits");
 
             res.send(`
-                <h1>DevOpsHub</h1>
-                <h2>Message Collector</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                <p>Number of Visits: ${visits}</p>
+    <title>DevOpsHub - Message Collector</title>
 
-                <form action="/submit" method="POST">
-                    <textarea
-                        name="message"
-                        placeholder="Write your message..."
-                        required>
-                    </textarea>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-                    <br><br>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1f2937;
+        }
 
-                    <button type="submit">Submit Message</button>
-                </form>
+        header {
+            background: #0f766e;
+            color: #fff;
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.7rem;
+        }
+
+        header p {
+            margin: 6px 0 0;
+            opacity: .85;
+        }
+
+        main {
+            max-width: 760px;
+            margin: 28px auto;
+            padding: 0 16px;
+        }
+
+        .stat {
+            background: #fff;
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+            margin-bottom: 20px;
+        }
+
+        .num {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #0f766e;
+        }
+
+        .label {
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        h2 {
+            margin: 32px 0 12px;
+            font-size: 1.15rem;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 130px;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #0f766e;
+        }
+
+        button {
+            margin-top: 16px;
+            padding: 11px 20px;
+            background: #0f766e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #115e59;
+        }
+
+        .dashboard {
+            display: inline-block;
+            margin-top: 22px;
+            padding: 10px 18px;
+            background: #0f766e;
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+        .dashboard:hover {
+            background: #115e59;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: .8rem;
+            margin: 24px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>DevOpsHub</h1>
+        <p>App 1 &middot; Message Collector &middot; Submit your messages</p>
+    </header>
+
+    <main>
+
+        <section class="stat">
+            <div class="num">${visits}</div>
+            <div class="label">Total Visits</div>
+        </section>
+
+        <h2>Submit a Message</h2>
+
+        <section class="form-card">
+
+            <form action="/submit" method="POST">
+
+                <textarea
+                    name="message"
+                    placeholder="Write your message..."
+                    required>
+                </textarea>
+
+                <button type="submit">
+                    Submit Message
+                </button>
+
+            </form>
+
+        </section>
+
+        <div style="text-align:center">
+            <a class="dashboard" href="http://localhost:3001">
+                View Dashboard
+            </a>
+        </div>
+
+    </main>
+
+    <footer>
+        Cloud Computing &amp; DevOps Midterm &middot; Shared Redis database
+    </footer>
+
+</body>
+</html>
             `);
 
         } catch (err) {
-            res.status(500).send("Error: " + err.message);
+            res.status(500).send("Error: " + escapeHtml(err.message));
         }
     });
 
+    // Submit Message
     app.post("/submit", async (req, res) => {
         try {
             const message = req.body.message;
@@ -65,7 +238,7 @@ async function startServer() {
             res.redirect("/");
 
         } catch (err) {
-            res.status(500).send("Error: " + err.message);
+            res.status(500).send("Error: " + escapeHtml(err.message));
         }
     });
 
