@@ -35,8 +35,8 @@ async function startServer() {
     // Home Page
     app.get("/", async (req, res) => {
         try {
-            // Increment visit counter
-            const visits = await client.incr("visits");
+            // Increment visit counter in Redis
+            await client.incr("visits");
 
             res.send(`
 <!DOCTYPE html>
@@ -80,26 +80,6 @@ async function startServer() {
             max-width: 760px;
             margin: 28px auto;
             padding: 0 16px;
-        }
-
-        .stat {
-            background: #fff;
-            border-radius: 10px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,.08);
-            margin-bottom: 20px;
-        }
-
-        .num {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #0f766e;
-        }
-
-        .label {
-            color: #475569;
-            margin-top: 4px;
         }
 
         h2 {
@@ -177,11 +157,6 @@ async function startServer() {
 
     <main>
 
-        <section class="stat">
-            <div class="num">${visits}</div>
-            <div class="label">Total Visits</div>
-        </section>
-
         <h2>Submit a Message</h2>
 
         <section class="form-card">
@@ -191,8 +166,7 @@ async function startServer() {
                 <textarea
                     name="message"
                     placeholder="Write your message..."
-                    required>
-                </textarea>
+                    required></textarea>
 
                 <button type="submit">
                     Submit Message
