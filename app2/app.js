@@ -2,7 +2,6 @@
 // Reads the shared Redis database on every page load and shows:
 //   - total number of messages  -> LLEN messages
 //   - total visits to App 1     -> GET visits
-//   - the 5 latest messages      -> LRANGE messages -5 -1
 // This app only READS from Redis; App 1 is the only writer.
 
 const express = require("express");
@@ -20,7 +19,7 @@ client.on("error", (err) => {
     console.error("Redis Client Error", err);
 });
 
-// Messages are user input, so escape them before putting them in HTML
+// Escape text before putting it in HTML (used for error messages)
 function escapeHtml(text) {
     return String(text)
         .replace(/&/g, "&amp;")
@@ -30,11 +29,7 @@ function escapeHtml(text) {
         .replace(/'/g, "&#39;");
 }
 
-function renderPage(totalMessages, totalVisits, latest) {
-    const rows = latest.length
-        ? latest.map((msg, i) => `<li><span>#${totalMessages - i}</span>${escapeHtml(msg)}</li>`).join("")
-        : `<li class="empty">No messages yet. Submit one from App 1.</li>`;
-
+function renderPage(totalMessages, totalVisits) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,12 +47,6 @@ function renderPage(totalMessages, totalVisits, latest) {
         .stat { background: #fff; border-radius: 10px; padding: 24px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
         .num { font-size: 3rem; font-weight: 700; color: #0f766e; }
         .label { color: #475569; margin-top: 4px; }
-        h2 { margin: 32px 0 12px; font-size: 1.15rem; }
-        ul { list-style: none; margin: 0; padding: 0; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
-        li { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; word-break: break-word; }
-        li:last-child { border-bottom: 0; }
-        li span { color: #0f766e; font-weight: 600; margin-right: 10px; }
-        li.empty { color: #64748b; text-align: center; }
         .refresh { display: inline-block; margin-top: 22px; padding: 10px 18px; background: #0f766e; color: #fff; border-radius: 6px; text-decoration: none; }
         footer { text-align: center; color: #64748b; font-size: .8rem; margin: 24px 0; }
     </style>
@@ -79,9 +68,6 @@ function renderPage(totalMessages, totalVisits, latest) {
             </div>
         </section>
 
-        <h2>Latest Messages</h2>
-        <ul>${rows}</ul>
-
         <div style="text-align:center"><a class="refresh" href="/">Refresh</a></div>
     </main>
     <footer>Cloud Computing &amp; DevOps Midterm &middot; Shared Redis database</footer>
@@ -98,9 +84,8 @@ async function startServer() {
             // Fresh data on every request
             const totalMessages = await client.lLen("messages");
             const totalVisits = parseInt(await client.get("visits"), 10) || 0;
-            const latest = (await client.lRange("messages", -5, -1)).reverse(); // newest first
 
-            res.send(renderPage(totalMessages, totalVisits, latest));
+            res.send(renderPage(totalMessages, totalVisits));
         } catch (err) {
             res.status(500).send("Error: " + escapeHtml(err.message));
         }
